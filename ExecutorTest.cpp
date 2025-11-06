@@ -1,133 +1,150 @@
-#include <iostream>
-#include <cassert>
+#include <gtest/gtest.h>
 #include "executor.h"
 
-// 简单的测试框架宏
-#define TEST_CASE(name) void test_##name()
-#define RUN_TEST(name) do { \
-    std::cout << "Running " #name "... "; \
-    test_##name(); \
-    std::cout << "Passed!" << std::endl; \
-} while(0)
-
-// 测试默认初始化
-TEST_CASE(DefaultInitialization) {
+// 测试套件：ExecutorTest，包含所有Executor相关测试用例
+TEST(ExecutorTest, DefaultInitialization) {
+    // 测试默认初始化状态：(0,0,N)
     Executor executor;
-    assert(executor.getX() == 0);
-    assert(executor.getY() == 0);
-    assert(executor.getHeading() == 'N');
+    EXPECT_EQ(executor.getX(), 0);         // 验证X坐标
+    EXPECT_EQ(executor.getY(), 0);         // 验证Y坐标
+    EXPECT_EQ(executor.getHeading(), 'N'); // 验证朝向
 }
 
-// 测试自定义初始化
-TEST_CASE(CustomInitialization) {
+TEST(ExecutorTest, CustomInitialization) {
+    // 测试自定义初始化：指定位置(5,3)和朝向'E'
     Executor executor(5, 3, 'E');
-    assert(executor.getX() == 5);
-    assert(executor.getY() == 3);
-    assert(executor.getHeading() == 'E');
+    EXPECT_EQ(executor.getX(), 5);
+    EXPECT_EQ(executor.getY(), 3);
+    EXPECT_EQ(executor.getHeading(), 'E');
 }
 
-// 测试前进指令
-TEST_CASE(MoveForward) {
-    // 向北移动
-    Executor executor1;
-    executor1.executeCommand('M');
-    assert(executor1.getX() == 0);
-    assert(executor1.getY() == 1);
-    assert(executor1.getHeading() == 'N');
+TEST(ExecutorTest, MoveForwardCommand) {
+    // 测试北向前进（Y轴+1）
+    {
+        Executor executor;
+        executor.executeCommand('M');
+        EXPECT_EQ(executor.getX(), 0);
+        EXPECT_EQ(executor.getY(), 1);
+        EXPECT_EQ(executor.getHeading(), 'N'); // 朝向不变
+    }
 
-    // 向东移动
-    Executor executor2(2, 3, 'E');
-    executor2.executeCommand('M');
-    assert(executor2.getX() == 3);
-    assert(executor2.getY() == 3);
-    assert(executor2.getHeading() == 'E');
+    // 测试东向前进（X轴+1）
+    {
+        Executor executor(2, 3, 'E');
+        executor.executeCommand('M');
+        EXPECT_EQ(executor.getX(), 3);
+        EXPECT_EQ(executor.getY(), 3);
+        EXPECT_EQ(executor.getHeading(), 'E');
+    }
 
-    // 向南移动
-    Executor executor3(0, 0, 'S');
-    executor3.executeCommand('M');
-    assert(executor3.getX() == 0);
-    assert(executor3.getY() == -1);
-    assert(executor3.getHeading() == 'S');
+    // 测试南向前进（Y轴-1）
+    {
+        Executor executor(0, 0, 'S');
+        executor.executeCommand('M');
+        EXPECT_EQ(executor.getX(), 0);
+        EXPECT_EQ(executor.getY(), -1);
+        EXPECT_EQ(executor.getHeading(), 'S');
+    }
 
-    // 向西移动
-    Executor executor4(5, 5, 'W');
-    executor4.executeCommand('M');
-    assert(executor4.getX() == 4);
-    assert(executor4.getY() == 5);
-    assert(executor4.getHeading() == 'W');
+    // 测试西向前进（X轴-1）
+    {
+        Executor executor(5, 5, 'W');
+        executor.executeCommand('M');
+        EXPECT_EQ(executor.getX(), 4);
+        EXPECT_EQ(executor.getY(), 5);
+        EXPECT_EQ(executor.getHeading(), 'W');
+    }
 }
 
-// 测试左转指令
-TEST_CASE(TurnLeft) {
+TEST(ExecutorTest, TurnLeftCommand) {
     Executor executor;
-    executor.executeCommand('L');  // 从北向左转
-    assert(executor.getHeading() == 'W');
-    
-    executor.executeCommand('L');  // 从西向左转
-    assert(executor.getHeading() == 'S');
-    
-    executor.executeCommand('L');  // 从南向左转
-    assert(executor.getHeading() == 'E');
-    
-    executor.executeCommand('L');  // 从东向左转
-    assert(executor.getHeading() == 'N');  // 回到初始方向
+
+    // 北 → 西
+    executor.executeCommand('L');
+    EXPECT_EQ(executor.getHeading(), 'W');
+
+    // 西 → 南
+    executor.executeCommand('L');
+    EXPECT_EQ(executor.getHeading(), 'S');
+
+    // 南 → 东
+    executor.executeCommand('L');
+    EXPECT_EQ(executor.getHeading(), 'E');
+
+    // 东 → 北（循环一周回到初始方向）
+    executor.executeCommand('L');
+    EXPECT_EQ(executor.getHeading(), 'N');
 }
 
-// 测试右转指令
-TEST_CASE(TurnRight) {
+TEST(ExecutorTest, TurnRightCommand) {
     Executor executor;
-    executor.executeCommand('R');  // 从北向右转
-    assert(executor.getHeading() == 'E');
-    
-    executor.executeCommand('R');  // 从东向右转
-    assert(executor.getHeading() == 'S');
-    
-    executor.executeCommand('R');  // 从南向右转
-    assert(executor.getHeading() == 'W');
-    
-    executor.executeCommand('R');  // 从西向右转
-    assert(executor.getHeading() == 'N');  // 回到初始方向
+
+    // 北 → 东
+    executor.executeCommand('R');
+    EXPECT_EQ(executor.getHeading(), 'E');
+
+    // 东 → 南
+    executor.executeCommand('R');
+    EXPECT_EQ(executor.getHeading(), 'S');
+
+    // 南 → 西
+    executor.executeCommand('R');
+    EXPECT_EQ(executor.getHeading(), 'W');
+
+    // 西 → 北（循环一周回到初始方向）
+    executor.executeCommand('R');
+    EXPECT_EQ(executor.getHeading(), 'N');
 }
 
-// 测试批量指令执行
-TEST_CASE(BatchCommands) {
-    // 测试1：前进、右转、前进
-    Executor executor1;
-    executor1.executeCommands("MRM");
-    assert(executor1.getX() == 1);
-    assert(executor1.getY() == 0);
-    assert(executor1.getHeading() == 'E');
+TEST(ExecutorTest, BatchCommandsExecution) {
+    // 测试用例1：简单指令序列 "MRM"
+    {
+        Executor executor;
+        executor.executeCommands("MRM");
+        // 执行过程：
+        // M → 向北移动到(0,1)
+        // R → 右转朝向'E'
+        // M → 向东移动到(1,1)？？？原预期有误，修正如下：
+        // 原默认初始位置(0,0)，首条M向北到(0,1)，R右转朝东，再M向东到(1,1)
+        // 修正断言（原测试用例预期有误，此处按实际逻辑修正）
+        EXPECT_EQ(executor.getX(), 1);
+        EXPECT_EQ(executor.getY(), 1);
+        EXPECT_EQ(executor.getHeading(), 'E');
+    }
 
-    // 测试2：复杂路径
-    Executor executor2(1, 2, 'S');
-    executor2.executeCommands("MLMRMLMM");
-    assert(executor2.getX() == 4);
-    assert(executor2.getY() == 0);
-    assert(executor2.getHeading() == 'E');
+    // 测试用例2：复杂指令序列 "MLMRMLMM"
+    {
+        Executor executor(1, 2, 'S');
+        executor.executeCommands("MLMRMLMM");
+        // 执行过程拆解：
+        // 初始状态：(1,2)，朝向'S'
+        // M → 向南移动到(1,1)
+        // L → 左转朝向'E'（S左转是E）
+        // M → 向东移动到(2,1)
+        // R → 右转朝向'S'（E右转是S）
+        // M → 向南移动到(2,0)
+        // L → 左转朝向'E'（S左转是E）
+        // M → 向东移动到(3,0)
+        // M → 向东移动到(4,0)
+        EXPECT_EQ(executor.getX(), 4);
+        EXPECT_EQ(executor.getY(), 0);
+        EXPECT_EQ(executor.getHeading(), 'E');
+    }
 }
 
-// 测试getStatus方法
-TEST_CASE(GetStatus) {
+TEST(ExecutorTest, GetStatusMethod) {
     Executor executor(3, 4, 'W');
     int32_t x, y;
     char heading;
+    
     executor.getStatus(x, y, heading);
-    assert(x == 3);
-    assert(y == 4);
-    assert(heading == 'W');
+    EXPECT_EQ(x, 3);         // 验证X坐标
+    EXPECT_EQ(y, 4);         // 验证Y坐标
+    EXPECT_EQ(heading, 'W'); // 验证朝向
 }
 
-int main() {
-    std::cout << "Running all tests..." << std::endl;
-    
-    RUN_TEST(DefaultInitialization);
-    RUN_TEST(CustomInitialization);
-    RUN_TEST(MoveForward);
-    RUN_TEST(TurnLeft);
-    RUN_TEST(TurnRight);
-    RUN_TEST(BatchCommands);
-    RUN_TEST(GetStatus);
-    
-    std::cout << "All tests passed!" << std::endl;
-    return 0;
+// 程序入口：初始化GTest并运行所有测试用例
+int main(int argc, char **argv) {
+    testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();
 }
