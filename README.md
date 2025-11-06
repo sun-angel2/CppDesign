@@ -17,7 +17,17 @@ Executor 是一个基于 C++ 开发的智能车指令执行组件，用于解析
 
 
 ```Plain Text
-
+C++作业/
+├── include/                # 头文件目录（可选，若项目规模扩展）
+│   └── executor.h          # 核心类接口定义
+├── src/
+│   ├── executor.cpp        # Executor 类实现
+│   └── ExecutorImpl.cpp    # 面向对象优化后的实现（可选，基于实验2-3设计）
+├── tests/
+│   └── ExecutorTest.cpp    # GTest 单元测试用例
+├── CMakeLists.txt          # CMake 编译配置文件
+├── .gitignore              # Git 忽略文件（忽略 build/ 等编译产物）
+└── README.md               # 项目说明文档（本文档）
 ```
 
 
@@ -26,13 +36,13 @@ Executor 是一个基于 C++ 开发的智能车指令执行组件，用于解析
 
 
 
-|文件/目录|功能描述|
-|---|---|
-|`executor.h`|定义 Executor 类接口，包含初始化、指令执行、状态查询等核心方法。|
-|`executor.cpp`|实现 Executor 类的指令逻辑（基本指令 M/L/R、加速 F、倒车 B、掉头 TR 等）。|
-|`ExecutorTest.cpp`|基于 GTest 的单元测试，覆盖初始化、所有指令功能的验证。|
-|`CMakeLists.txt`|配置编译规则，生成可执行文件和测试程序（如 `test_executor`）。|
-|`.gitignore`|指定 Git 忽略的文件（如 `build/` 编译目录、`.exe` 可执行文件）。|
+| 文件/目录          | 功能描述                                                                   |
+| ------------------ | -------------------------------------------------------------------------- |
+| `executor.h`       | 定义 Executor 类接口，包含初始化、指令执行、状态查询等核心方法。           |
+| `executor.cpp`     | 实现 Executor 类的指令逻辑（基本指令 M/L/R、加速 F、倒车 B、掉头 TR 等）。 |
+| `ExecutorTest.cpp` | 基于 GTest 的单元测试，覆盖初始化、所有指令功能的验证。                    |
+| `CMakeLists.txt`   | 配置编译规则，生成可执行文件和测试程序（如 `test_executor`）。             |
+| `.gitignore`       | 指定 Git 忽略的文件（如 `build/` 编译目录、`.exe` 可执行文件）。           |
 
 
 ## 环境准备
@@ -66,7 +76,16 @@ Executor 是一个基于 C++ 开发的智能车指令执行组件，用于解析
 
 
 ```Bash
-
+# 1. 克隆 vcpkg（若未安装）
+git clone https://github.com/microsoft/vcpkg.git
+# 2. 初始化 vcpkg（Windows）
+.\vcpkg\bootstrap-vcpkg.bat
+# 3. 安装 GTest（x64 架构，Windows）
+.\vcpkg\vcpkg install gtest:x64-windows
+# Linux/macOS 初始化并安装
+./vcpkg/bootstrap-vcpkg.sh
+./vcpkg/vcpkg install gtest:x64-linux  # Linux
+./vcpkg/vcpkg install gtest:x64-osx    # macOS
 ```
 
 
@@ -80,7 +99,8 @@ Executor 是一个基于 C++ 开发的智能车指令执行组件，用于解析
 
 
 ```Bash
-
+git clone https://github.com/你的用户名/Executor.git  # 替换为你的 GitHub/Gitee 仓库地址
+cd Executor
 ```
 
 
@@ -94,7 +114,12 @@ Executor 是一个基于 C++ 开发的智能车指令执行组件，用于解析
 
 
 ```Bash
-
+# 1. 创建并进入 build 目录
+mkdir build && cd build
+# 2. 生成构建文件（指定 vcpkg 工具链，若安装了 GTest）
+cmake .. -DCMAKE_TOOLCHAIN_FILE="你的 vcpkg 路径/scripts/buildsystems/vcpkg.cmake"
+# 3. 编译（Debug 模式，Windows 可省略 --config Debug，默认 Debug）
+cmake --build . --config Debug
 ```
 
 
@@ -137,11 +162,11 @@ Executor 组件支持多种指令，指令行为遵循需求定义，核心功�
 
 
 
-|指令|行为描述|
-|---|---|
-|M|前进 1 格（朝向决定方向：N→Y+1，S→Y-1，E→X+1，W→X-1），朝向不变。|
-|L|左转 90°（N→W→S→E→N），位置不变。|
-|R|右转 90°（N→E→S→W→N），位置不变。|
+| 指令 | 行为描述                                                          |
+| ---- | ----------------------------------------------------------------- |
+| M    | 前进 1 格（朝向决定方向：N→Y+1，S→Y-1，E→X+1，W→X-1），朝向不变。 |
+| L    | 左转 90°（N→W→S→E→N），位置不变。                                 |
+| R    | 右转 90°（N→E→S→W→N），位置不变。                                 |
 
 
 #### 批量指令执行
@@ -153,7 +178,7 @@ Executor 组件支持多种指令，指令行为遵循需求定义，核心功�
 
 
 ```C++
-
+executor.executeCommands("MRM");  // 先前进→右转→前进
 ```
 
 
@@ -219,7 +244,27 @@ Executor 组件支持多种指令，指令行为遵循需求定义，核心功�
 
 
 ```C++
+#include "executor.h"
+#include <iostream>
 
+int main() {
+    // 1. 自定义初始化：位置 (1, 2)，朝向 'S'
+    Executor executor(1, 2, 'S');
+    
+    // 2. 执行指令："MLMRMLMM"（参考需求文档示例）
+    executor.executeCommands("MLMRMLMM");
+    
+    // 3. 查询状态
+    int32_t x, y;
+    char heading;
+    executor.getStatus(x, y, heading);
+    
+    // 4. 输出结果（预期：x=4, y=0, heading='E'）
+    std::cout << "当前位置：(" << x << ", " << y << ")" << std::endl;
+    std::cout << "当前朝向：" << heading << std::endl;
+    
+    return 0;
+}
 ```
 
 
@@ -229,7 +274,8 @@ Executor 组件支持多种指令，指令行为遵循需求定义，核心功�
 
 
 ```Plain Text
-
+当前位置：(4, 0)
+当前朝向：E
 ```
 
 
@@ -247,7 +293,10 @@ Executor 组件支持多种指令，指令行为遵循需求定义，核心功�
 
 
 ```Bash
-
+# 进入测试程序目录
+cd build/Debug
+# 运行测试
+./test_executor.exe
 ```
 
 
@@ -257,7 +306,8 @@ Executor 组件支持多种指令，指令行为遵循需求定义，核心功�
 
 
 ```Bash
-
+# 在 build 目录下执行
+ctest -C Debug  # Debug 模式，Release 模式替换为 -C Release
 ```
 
 
@@ -321,4 +371,3 @@ Executor 组件支持多种指令，指令行为遵循需求定义，核心功�
 4. [C++ 参考手册](https://en.cppreference.com/)
 
 5. [VS Code CMake Tools 扩展指南](https://code.visualstudio.com/docs/cpp/cmake-linux)
-> （注：文档部分内容可能由 AI 生成）
