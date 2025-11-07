@@ -202,6 +202,79 @@ TEST(ExecutorTest, AccelerationComplex) {
     EXPECT_EQ(executor.getHeading(), 'N');
 }
 
+// --- 需求3：倒车功能测试 ---
+
+TEST(ExecutorTest, ReverseToggle) {
+    Executor executor;
+    executor.executeCommand('B'); // 进入倒车
+    executor.executeCommand('M'); // 后退
+    EXPECT_EQ(executor.getY(), -1);
+
+    executor.executeCommand('B'); // 退出倒车
+    executor.executeCommand('M'); // 前进
+    EXPECT_EQ(executor.getY(), 0);
+}
+
+TEST(ExecutorTest, ReverseModeCommands) {
+    // 测试倒车后退
+    {
+        Executor executor(0, 0, 'N');
+        executor.executeCommands("BM");
+        EXPECT_EQ(executor.getY(), -1);
+        EXPECT_EQ(executor.getHeading(), 'N');
+    }
+    // 测试倒车时左转(实际右转)
+    {
+        Executor executor;
+        executor.executeCommands("BL");
+        EXPECT_EQ(executor.getHeading(), 'E');
+    }
+    // 测试倒车时右转(实际左转)
+    {
+        Executor executor;
+        executor.executeCommands("BR");
+        EXPECT_EQ(executor.getHeading(), 'W');
+    }
+}
+
+TEST(ExecutorTest, Combined_F_B_State_Commands) {
+    // 测试F+B状态下后退
+    {
+        Executor executor;
+        executor.executeCommands("FBM");
+        EXPECT_EQ(executor.getY(), -2);
+    }
+    // 测试F+B状态下左转(先退再右转)
+    {
+        Executor executor(1, 1, 'S');
+        executor.executeCommands("FBL");
+        EXPECT_EQ(executor.getY(), 2); // S向后退是Y+1
+        EXPECT_EQ(executor.getHeading(), 'E'); // S倒车时L是右转,S右边是E
+    }
+    // 测试F+B状态下右转(先退再左转)
+    {
+        Executor executor(1, 1, 'S');
+        executor.executeCommands("FBR");
+        EXPECT_EQ(executor.getY(), 2); // S向后退是Y+1
+        EXPECT_EQ(executor.getHeading(), 'W'); // S倒车时R是左转,S左边是W
+    }
+}
+
+TEST(ExecutorTest, CombinedStateComplex) {
+    Executor executor;
+    executor.executeCommands("BMRBMLM");
+    // B -> 倒车
+    // M -> 后退到 (0,-1)
+    // R -> 左转到 W
+    // B -> 退出倒车
+    // M -> 向西前进到 (-1,-1)
+    // L -> 左转到 S
+    // M -> 向南前进到 (-1,-2)
+    EXPECT_EQ(executor.getX(), -1);
+    EXPECT_EQ(executor.getY(), -2);
+    EXPECT_EQ(executor.getHeading(), 'S');
+}
+
 // 程序入口：初始化GTest并运行所有测试用例
 int main(int argc, char **argv) {
     testing::InitGoogleTest(&argc, argv);
