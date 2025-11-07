@@ -100,8 +100,11 @@ void Executor::executeCommand(char command) {
 
 // 执行批量指令
 void Executor::executeCommands(const std::string& commands) {
-    for (char c : commands) {
-        executeCommand(c);
+    size_t i = 0;
+    while (i < commands.length()) {
+        // 当前只处理单字符指令，为后续多字符指令（如TR）预留结构
+        executeCommand(commands[i]);
+        i++;
     }
 }
 
