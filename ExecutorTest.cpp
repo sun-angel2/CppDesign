@@ -275,6 +275,48 @@ TEST(ExecutorTest, CombinedStateComplex) {
     EXPECT_EQ(executor.getHeading(), 'S');
 }
 
+// --- 需求4：掉头功能测试 ---
+
+TEST(ExecutorTest, TurnRoundNormal) {
+    Executor executor;
+    executor.executeCommands("TR");
+    // 初始(0,0,N) -> L -> (0,0,W) -> M -> (-1,0,W) -> L -> (-1,0,S)
+    EXPECT_EQ(executor.getX(), -1);
+    EXPECT_EQ(executor.getY(), 0);
+    EXPECT_EQ(executor.getHeading(), 'S');
+}
+
+TEST(ExecutorTest, TurnRoundAccelerated) {
+    Executor executor;
+    executor.executeCommands("FTR");
+    // F -> 加速
+    // TR -> M -> (0,1,N) -> L -> (0,1,W) -> M -> (-1,1,W) -> L -> (-1,1,S)
+    EXPECT_EQ(executor.getX(), -1);
+    EXPECT_EQ(executor.getY(), 1);
+    EXPECT_EQ(executor.getHeading(), 'S');
+}
+
+TEST(ExecutorTest, TurnRoundUnaffectedByReverse) {
+    Executor executor;
+    // B -> 倒车, TR不受其影响
+    executor.executeCommands("BTR");
+    // 初始(0,0,N) -> L -> (0,0,W) -> M -> (-1,0,W) -> L -> (-1,0,S)
+    EXPECT_EQ(executor.getX(), -1);
+    EXPECT_EQ(executor.getY(), 0);
+    EXPECT_EQ(executor.getHeading(), 'S');
+}
+
+TEST(ExecutorTest, TurnRoundComplex) {
+    Executor executor(1, 1, 'E');
+    executor.executeCommands("MTRM");
+    // M -> (2,1,E)
+    // TR -> L -> (2,1,N) -> M -> (2,2,N) -> L -> (2,2,W)
+    // M -> (1,2,W)
+    EXPECT_EQ(executor.getX(), 1);
+    EXPECT_EQ(executor.getY(), 2);
+    EXPECT_EQ(executor.getHeading(), 'W');
+}
+
 // 程序入口：初始化GTest并运行所有测试用例
 int main(int argc, char **argv) {
     testing::InitGoogleTest(&argc, argv);
