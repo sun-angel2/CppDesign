@@ -10,6 +10,7 @@ private:
     int32_t y_;         // Y坐标
     char heading_;      // 朝向(N/S/E/W)
     bool is_accelerating_; // 加速状态标志
+    bool is_reversing_;    // 倒车状态标志
 
     // 辅助方法：处理左转
     void turnLeft();
@@ -17,6 +18,8 @@ private:
     void turnRight();
     // 辅助方法：处理前进
     void moveForward();
+    // 辅助方法：处理后退
+    void moveBackward();
 
 public:
     // 默认构造函数，初始化为(0,0,N)
