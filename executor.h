@@ -9,7 +9,8 @@ private:
     int32_t x_;         // X坐标
     int32_t y_;         // Y坐标
     char heading_;      // 朝向(N/S/E/W)
-    
+    bool is_accelerating_; // 加速状态标志
+
     // 辅助方法：处理左转
     void turnLeft();
     // 辅助方法：处理右转

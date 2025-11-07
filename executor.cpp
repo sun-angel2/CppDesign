@@ -1,11 +1,11 @@
 #include "executor.h"
 
 // 默认初始化
-Executor::Executor() : x_(0), y_(0), heading_('N') {}
+Executor::Executor() : x_(0), y_(0), heading_('N'), is_accelerating_(false) {}
 
 // 自定义初始化
 Executor::Executor(int32_t x, int32_t y, char heading) 
-    : x_(x), y_(y), heading_(heading) {}
+    : x_(x), y_(y), heading_(heading), is_accelerating_(false) {}
 
 // 左转逻辑
 void Executor::turnLeft() {
@@ -40,9 +40,33 @@ void Executor::moveForward() {
 // 执行单个指令
 void Executor::executeCommand(char command) {
     switch (command) {
-        case 'M': moveForward(); break;
-        case 'L': turnLeft(); break;
-        case 'R': turnRight(); break;
+        case 'F':
+            is_accelerating_ = !is_accelerating_;
+            break;
+        case 'M':
+            if (is_accelerating_) {
+                moveForward();
+                moveForward();
+            } else {
+                moveForward();
+            }
+            break;
+        case 'L':
+            if (is_accelerating_) {
+                moveForward();
+                turnLeft();
+            } else {
+                turnLeft();
+            }
+            break;
+        case 'R':
+            if (is_accelerating_) {
+                moveForward();
+                turnRight();
+            } else {
+                turnRight();
+            }
+            break;
     }
 }
 
