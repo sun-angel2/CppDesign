@@ -57,7 +57,9 @@ void Executor::executeCommand(char command) {
             is_reversing_ = !is_reversing_;
             break;
         case 'M':
-            if (is_accelerating_) {
+            if (is_reversing_) {
+                moveBackward();
+            } else if (is_accelerating_) {
                 moveForward();
                 moveForward();
             } else {
@@ -65,7 +67,9 @@ void Executor::executeCommand(char command) {
             }
             break;
         case 'L':
-            if (is_accelerating_) {
+            if (is_reversing_) {
+                turnRight();
+            } else if (is_accelerating_) {
                 moveForward();
                 turnLeft();
             } else {
@@ -73,7 +77,9 @@ void Executor::executeCommand(char command) {
             }
             break;
         case 'R':
-            if (is_accelerating_) {
+            if (is_reversing_) {
+                turnLeft();
+            } else if (is_accelerating_) {
                 moveForward();
                 turnRight();
             } else {
