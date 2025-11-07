@@ -143,6 +143,65 @@ TEST(ExecutorTest, GetStatusMethod) {
     EXPECT_EQ(heading, 'W'); // 验证朝向
 }
 
+// --- 需求2：加速功能测试 ---
+
+TEST(ExecutorTest, AccelerationToggle) {
+    Executor executor;
+    // 初始为非加速状态，执行F进入加速
+    executor.executeCommand('F');
+    // 验证进入加速状态后的行为（例如M前进2格）
+    executor.executeCommand('M');
+    EXPECT_EQ(executor.getY(), 2);
+
+    // 再次执行F退出加速
+    executor.executeCommand('F');
+    // 验证退出加速状态后的行为（例如M前进1格）
+    executor.executeCommand('M');
+    EXPECT_EQ(executor.getY(), 3);
+}
+
+TEST(ExecutorTest, AccelerationMoveForward) {
+    Executor executor;
+    executor.executeCommand('F'); // 进入加速
+    executor.executeCommand('M');
+    EXPECT_EQ(executor.getX(), 0);
+    EXPECT_EQ(executor.getY(), 2); // 前进2格
+    EXPECT_EQ(executor.getHeading(), 'N');
+}
+
+TEST(ExecutorTest, AccelerationTurnLeft) {
+    Executor executor;
+    executor.executeCommand('F'); // 进入加速
+    executor.executeCommand('L');
+    // 先前进1格到(0,1)，再左转
+    EXPECT_EQ(executor.getX(), 0);
+    EXPECT_EQ(executor.getY(), 1);
+    EXPECT_EQ(executor.getHeading(), 'W');
+}
+
+TEST(ExecutorTest, AccelerationTurnRight) {
+    Executor executor(1, 1, 'E');
+    executor.executeCommand('F'); // 进入加速
+    executor.executeCommand('R');
+    // 先前进1格到(2,1)，再右转
+    EXPECT_EQ(executor.getX(), 2);
+    EXPECT_EQ(executor.getY(), 1);
+    EXPECT_EQ(executor.getHeading(), 'S');
+}
+
+TEST(ExecutorTest, AccelerationComplex) {
+    Executor executor;
+    executor.executeCommands("FMRML");
+    // F -> 加速
+    // M -> 向北前进2格到 (0,2)
+    // R -> 前进1格到 (0,3)，然后右转朝向E
+    // M -> 向东前进2格到 (2,3)
+    // L -> 前进1格到 (3,3)，然后左转朝向N
+    EXPECT_EQ(executor.getX(), 3);
+    EXPECT_EQ(executor.getY(), 3);
+    EXPECT_EQ(executor.getHeading(), 'N');
+}
+
 // 程序入口：初始化GTest并运行所有测试用例
 int main(int argc, char **argv) {
     testing::InitGoogleTest(&argc, argv);
