@@ -20,6 +20,8 @@ private:
     void moveForward();
     // 辅助方法：处理后退
     void moveBackward();
+    // 辅助方法：处理掉头
+    void executeTurnRound();
 
 public:
     // 默认构造函数，初始化为(0,0,N)

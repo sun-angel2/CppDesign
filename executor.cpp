@@ -47,6 +47,20 @@ void Executor::moveBackward() {
     }
 }
 
+// 掉头逻辑
+void Executor::executeTurnRound() {
+    if (is_accelerating_) {
+        moveForward();
+        turnLeft();
+        moveForward();
+        turnLeft();
+    } else {
+        turnLeft();
+        moveForward();
+        turnLeft();
+    }
+}
+
 // 执行单个指令
 void Executor::executeCommand(char command) {
     switch (command) {
@@ -102,9 +116,13 @@ void Executor::executeCommand(char command) {
 void Executor::executeCommands(const std::string& commands) {
     size_t i = 0;
     while (i < commands.length()) {
-        // 当前只处理单字符指令，为后续多字符指令（如TR）预留结构
-        executeCommand(commands[i]);
-        i++;
+        if (i + 1 < commands.length() && commands.substr(i, 2) == "TR") {
+            executeTurnRound();
+            i += 2;
+        } else {
+            executeCommand(commands[i]);
+            i++;
+        }
     }
 }
 
