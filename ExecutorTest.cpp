@@ -249,14 +249,14 @@ TEST(ExecutorTest, Combined_F_B_State_Commands) {
         Executor executor(1, 1, 'S');
         executor.executeCommands("FBL");
         EXPECT_EQ(executor.getY(), 2); // S向后退是Y+1
-        EXPECT_EQ(executor.getHeading(), 'E'); // S倒车时L是右转,S右边是E
+        EXPECT_EQ(executor.getHeading(), 'W'); // S倒车时L是右转,S右边是W (修正)
     }
     // 测试F+B状态下右转(先退再左转)
     {
         Executor executor(1, 1, 'S');
         executor.executeCommands("FBR");
         EXPECT_EQ(executor.getY(), 2); // S向后退是Y+1
-        EXPECT_EQ(executor.getHeading(), 'W'); // S倒车时R是左转,S左边是W
+        EXPECT_EQ(executor.getHeading(), 'E'); // S倒车时R是左转,S左边是E (修正)
     }
 }
 
