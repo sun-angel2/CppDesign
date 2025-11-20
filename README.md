@@ -1,8 +1,6 @@
 # C++ 智能车指令执行器 (Executor)
 
-本项目是一个基于 C++ 实现的智能车控制系统核心组件——指令执行器。它能够解析并执行一系列复杂的移动和转向指令，支持多种状态（如加速、倒车）的切换与叠加。
-
-项目采用CMake进行构建管理，并使用Google Test框架进行单元测试，确保代码质量与功能的正确性。
+本项目是一个基于 C++ 实现的智能车控制系统核心组件——指令执行器。它能够解析并执行一系列复杂的移动和转向指令，支持多种状态（如加速、倒车）的切换与叠加。项目采用CMake进行构建管理，并使用Google Test框架进行单元测试，确保代码质量与功能的正确性。
 
 ## 核心功能
 
@@ -26,7 +24,7 @@
 ### 3. 组合状态下的指令行为
 
 - **加速状态 (`F` 激活)**:
-  - `M`: 前进2格（逐格移动）。
+  - `M`: 前进2格（分两次前进1格，每次移动更新位置）。
   - `L`: 先前进1格，再左转90度。
   - `R`: 先前进1格，再右转90度。
 
@@ -36,7 +34,7 @@
   - `R`: **左转**90度（与常规行为相反）。
 
 - **加速与倒车叠加状态 (`F` 和 `B` 均激活)**:
-  - `M`: **后退**2格（逐格移动）。
+  - `M`: **后退**2格（分两次后退1格，每次移动更新位置）。
   - `L`: 先**后退**1格，再**右转**90度。
   - `R`: 先**后退**1格，再**左转**90度。
 
@@ -46,6 +44,18 @@
   - **普通状态**: 左转90度 → 前进1格 → 左转90度。
   - **加速状态**: 前进1格 → 左转90度 → 前进1格 → 左转90度。
   - **注意**: `TR` 指令不受倒车状态 (`B`) 影响。
+
+#### 示例序列
+
+假设智能车初始位置为 `(0,0)`，朝向 `N` (北)。
+
+| 指令序列 | 最终位置 | 最终朝向 | 描述 |
+| :-------- | :-------- | :-------- | :--- |
+| `M`       | `(0,1)`   | `N`       | 前进1格。 |
+| `RM`      | `(1,0)`   | `E`       | 右转，然后前进1格。 |
+| `FM`      | `(0,2)`   | `N`       | 开启加速，前进2格。 |
+| `BMM`     | `(0,-2)`  | `N`       | 开启倒车，后退2格。 |
+| `FBTR`    | `(-1,1)`  | `S`       | 开启加速与倒车，但`TR`不受倒车影响。执行加速状态下的`TR`指令：前进1格 → 左转90度 → 前进1格 → 左转90度。 |
 
 ---
 
@@ -131,13 +141,78 @@ ctest -C Debug
 
 ---
 
+## 使用示例 (How to Integrate)
+
+本项目提供 `Executor` 类作为核心逻辑组件。您可以在自己的 C++ 项目中包含 `executor.h` 并链接 `executor.cpp` 来使用它。
+
+以下是一个简单的示例，展示如何在 `main` 函数中使用 `Executor`：
+
+```cpp
+#include "executor.h"
+#include <iostream>
+#include <vector>
+#include <string>
+
+int main() {
+    Executor executor;
+
+    // 初始状态: (0,0), North
+    std::cout << "Initial: Pos(" << executor.getX() << "," << executor.getY() << "), Dir(" << executor.getHeading() << ")" << std::endl;
+
+    // 执行指令序列
+    std::vector<std::string> commands = {"F", "M", "R", "M", "B", "M"};
+    for (const std::string& cmd : commands) {
+        // executeCommand 接收 char, 所以我们需要将 string 的第一个字符传入
+        if (!cmd.empty()) {
+            executor.executeCommand(cmd[0]);
+        }
+        std::cout << "Command: " << cmd << " -> Pos(" << executor.getX() << "," << executor.getY() << "), Dir(" << executor.getHeading() << ")" << std::endl;
+    }
+
+    // 最终状态
+    std::cout << "Final: Pos(" << executor.getX() << "," << executor.getY() << "), Dir(" << executor.getHeading() << ")" << std::endl;
+
+    return 0;
+}
+```
+
+将上述代码保存为 `main.cpp`，并在您的 `CMakeLists.txt` 中添加或修改为：
+
+```cmake
+# 添加可执行文件
+add_executable(my_vehicle_app main.cpp executor.cpp)
+
+# 链接必要的库
+# 假设 Executor 相关的源文件编译为库 (例如通过 add_library)
+# 如果 executor.cpp 直接作为源文件加入 my_vehicle_app，则不需要 target_link_libraries Executor
+# 如果 Executor 是一个独立的库，请确保它已被正确定义，例如:
+# add_library(Executor executor.cpp executor.h)
+# 之后再链接:
+# target_link_libraries(my_vehicle_app PRIVATE Executor)
+
+# 简单的做法是将所有源文件直接添加到可执行文件
+# (如果 Executor.cpp 不作为单独的库存在)
+target_sources(my_vehicle_app PRIVATE executor.cpp executor.h) # 添加源文件
+```
+*请根据您的实际 `CMakeLists.txt` 配置调整。*
+
+---
+
 ## 代码结构
 
 ```
 .
-├── executor.h          # Executor 类的头文件，定义接口和成员
-├── executor.cpp        # Executor 类的实现文件，包含所有指令逻辑
-├── ExecutorTest.cpp    # 单元测试文件，使用 GTest 框架
-├── CMakeLists.txt      # CMake 构建脚本
-└── README.md           # 本文档
+├── executor.h          # 定义 Executor 类的接口和成员，管理智能车状态和行为。
+├── executor.cpp        # 实现 Executor 类的所有方法，包含指令解析和执行逻辑。
+├── ExecutorTest.cpp    # 包含使用 Google Test 框架编写的单元测试，验证 Executor 功能的正确性。
+├── CMakeLists.txt      # 项目的 CMake 构建脚本，负责编译配置、依赖管理和测试集成。
+├── README.md           # 本项目说明文档。
+├── LICENSE             # 项目的许可证信息。
+└── vehicle_behavior.h  # 可能包含智能车相关的枚举、常量或共享结构定义。
 ```
+
+---
+
+## 许可证
+
+本项目采用 [MIT 许可证](LICENSE)。详情请参阅 `LICENSE` 文件。
