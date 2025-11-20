@@ -113,31 +113,62 @@ cmake .. -DCMAKE_TOOLCHAIN_FILE="<path-to-vcpkg>/scripts/buildsystems/vcpkg.cmak
 cmake --build .
 ```
 
-### 3. 运行测试
+### 3. 运行测试 (使用 Google Test)
 
-编译成功后，测试程序将生成在 `build` 目录中。
+本项目使用 Google Test 框架进行单元测试。要运行测试，请按照以下步骤操作：
 
-#### 方式一：使用 CTest
+1.  **准备构建目录**:
+    首先，确保您已完成项目的编译步骤。如果您在项目根目录下，可以执行以下命令：
+    ```bash
+    # 进入项目根目录
+    cd <项目目录>
+    # 创建并进入构建目录 (如果尚未创建)
+    mkdir build
+    cd build
+    ```
 
-在 `build` 目录下执行：
+2.  **使用 CMake 生成构建文件**:
+    在 `build` 目录下，使用 CMake 生成特定于您系统的构建文件。
+    ```bash
+    # 替换 <path-to-vcpkg> 为您的 vcpkg 实际路径
+    cmake .. -DCMAKE_TOOLCHAIN_FILE="<path-to-vcpkg>/scripts/buildsystems/vcpkg.cmake"
+    ```
+
+3.  **编译项目**:
+    在 `build` 目录下，编译项目。
+    ```bash
+    cmake --build .
+    ```
+    这将编译所有源文件，包括测试文件，并生成测试可执行文件。
+
+4.  **运行测试可执行文件**:
+    编译成功后，测试程序通常会生成在 `build/Debug` (Windows) 或 `build` (Linux/macOS) 目录下。
+    -   **Windows 用户**:
+        在 `build` 目录下，进入 `Debug` 文件夹并运行 `test_executor.exe`：
+        ```bash
+        cd Debug
+        .\test_executor.exe
+        ```
+    -   **Linux/macOS 用户**:
+        在 `build` 目录下，直接运行 `test_executor` (如果它在 `build` 根目录)：
+        ```bash
+        ./test_executor
+        ```
+        或者，如果它位于子目录（例如 `build/test_executor`），则：
+        ```bash
+        ./test_executor
+        ```
+
+    成功运行后，您将看到 Google Test 提供的原生测试通过界面，显示所有测试用例的执行结果。如果所有测试都通过，即代表所有功能均按预期工作。
+
+#### 替代方法：使用 CTest
+
+您也可以在 `build` 目录下使用 CTest 运行测试：
 
 ```bash
 # -C Debug 是为了确保在 Debug 模式下运行，如果您的构建配置是 Release，请相应修改
 ctest -C Debug
 ```
-
-#### 方式二：直接运行测试程序
-
-测试程序的可执行文件通常位于 `build/Debug` 目录下。
-
-```bash
-# Windows
-.\Debug\test_executor.exe
-
-# Linux/macOS
-./test_executor
-```
-所有测试通过，即代表所有功能均按预期工作。
 
 ---
 
