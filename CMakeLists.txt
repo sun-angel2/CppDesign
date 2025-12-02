@@ -1,53 +1,38 @@
-# 最低CMake版本要求（兼容主流环境）
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.14)
 
-# 先设置vcpkg工具链（必须在project前，确保依赖查找生效）
-set(CMAKE_TOOLCHAIN_FILE "E:/vcpkg/scripts/buildsystems/vcpkg.cmake" 
-    CACHE STRING "vcpkg toolchain file")
-
-# 项目名称与C++标准
 project(ExecutorGTest)
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 14) # GTest requires at least C++14 in newer versions, or we stick to an older one. 
+                           # C++11 is supported by GTest 1.12.x. Let's use C++14 to be safe with modern GTest.
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# 强制刷新依赖路径（解决缓存冲突）
-unset(GTEST_LIBRARY CACHE)
-unset(GTEST_INCLUDE_DIR CACHE)
-unset(GTEST_MAIN_LIBRARY CACHE)
+# 使用 FetchContent 自动下载并集成 GoogleTest
+include(FetchContent)
+message(STATUS "Fetching GoogleTest...")
+FetchContent_Declare(
+  googletest
+  URL https://github.com/google/googletest/archive/refs/tags/v1.14.0.zip
+)
+# 强制使用共享 CRT (Windows上常用)
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 
-# 查找GTest库（通过vcpkg安装的版本）
-find_package(GTest REQUIRED)
-if(NOT GTEST_FOUND)
-    message(FATAL_ERROR "GTest未找到！请确认已通过vcpkg安装：vcpkg install gtest:x64-windows")
-endif()
+FetchContent_MakeAvailable(googletest)
 
-# 包含头文件目录（项目自身+GTest）
 include_directories(
-    ${CMAKE_CURRENT_SOURCE_DIR}  # 项目根目录（executor.h所在位置）
-    ${GTEST_INCLUDE_DIRS}        # GTest头文件路径
+    ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-# 源文件列表
 set(SOURCE_FILES
-    executor.cpp        # 核心实现
-    ExecutorTest.cpp    # 测试用例
+    executor.cpp
+    ExecutorTest.cpp
 )
 
-# 生成测试可执行文件
 add_executable(test_executor ${SOURCE_FILES})
 
-# 链接GTest库（使用vcpkg提供的目标，自动处理路径）
+# 链接 gtest_main (包含 main 函数)
 target_link_libraries(test_executor
-    PRIVATE GTest::gtest
-    PRIVATE GTest::gtest_main
+    PRIVATE gtest_main
 )
 
-# Windows特殊处理：MinGW需要链接pthread
-if(MINGW)
-    target_link_libraries(test_executor PRIVATE pthread)
-endif()
-
-# 测试配置
 enable_testing()
 add_test(
     NAME AllExecutorTests
