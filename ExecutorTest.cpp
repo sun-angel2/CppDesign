@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include "executor.h"
+#include "concrete_behaviors.h"
 
 // 测试套件：ExecutorTest，包含所有Executor相关测试用例
 TEST(ExecutorTest, DefaultInitialization) {
@@ -315,6 +316,60 @@ TEST(ExecutorTest, TurnRoundComplex) {
     EXPECT_EQ(executor.getX(), 1);
     EXPECT_EQ(executor.getY(), 2);
     EXPECT_EQ(executor.getHeading(), 'W');
+}
+
+// --- 需求5：不同车型测试 (SportsCar, Bus) ---
+
+TEST(ExecutorTest, SportsCarBehavior) {
+    Executor executor;
+    SportsCarBehavior sportsCar;
+    executor.setBehavior(&sportsCar);
+
+    // M: 前进2格
+    executor.executeCommand('M');
+    EXPECT_EQ(executor.getX(), 0);
+    EXPECT_EQ(executor.getY(), 2);
+    EXPECT_EQ(executor.getHeading(), 'N');
+
+    // L: 先左转90度(N->W)，再前进1格
+    // 当前(0,2,N) -> (0,2,W) -> (-1,2,W)
+    executor.executeCommand('L');
+    EXPECT_EQ(executor.getHeading(), 'W');
+    EXPECT_EQ(executor.getX(), -1);
+    EXPECT_EQ(executor.getY(), 2);
+
+    // R: 先右转90度(W->N)，再前进1格
+    // 当前(-1,2,W) -> (-1,2,N) -> (-1,3,N)
+    executor.executeCommand('R');
+    EXPECT_EQ(executor.getHeading(), 'N');
+    EXPECT_EQ(executor.getX(), -1);
+    EXPECT_EQ(executor.getY(), 3);
+}
+
+TEST(ExecutorTest, BusBehavior) {
+    Executor executor;
+    BusBehavior bus;
+    executor.setBehavior(&bus);
+
+    // M: 前进1格
+    executor.executeCommand('M');
+    EXPECT_EQ(executor.getX(), 0);
+    EXPECT_EQ(executor.getY(), 1);
+    EXPECT_EQ(executor.getHeading(), 'N');
+
+    // L: 先前进1格，再左转90度
+    // 当前(0,1,N) -> (0,2,N) -> (0,2,W)
+    executor.executeCommand('L');
+    EXPECT_EQ(executor.getX(), 0);
+    EXPECT_EQ(executor.getY(), 2);
+    EXPECT_EQ(executor.getHeading(), 'W');
+
+    // R: 先前进1格，再右转90度
+    // 当前(0,2,W) -> (-1,2,W) -> (-1,2,N)
+    executor.executeCommand('R');
+    EXPECT_EQ(executor.getX(), -1);
+    EXPECT_EQ(executor.getY(), 2);
+    EXPECT_EQ(executor.getHeading(), 'N');
 }
 
 // 程序入口：初始化GTest并运行所有测试用例

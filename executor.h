@@ -4,6 +4,8 @@
 #include <cstdint>
 #include <string>
 
+class IVehicleBehavior;
+
 class Executor {
 private:
     int32_t x_;         // X坐标
@@ -11,7 +13,9 @@ private:
     char heading_;      // 朝向(N/S/E/W)
     bool is_accelerating_; // 加速状态标志
     bool is_reversing_;    // 倒车状态标志
+    IVehicleBehavior* behavior_; // 行为策略
 
+public:
     // 辅助方法：处理左转
     void turnLeft();
     // 辅助方法：处理右转
@@ -29,6 +33,9 @@ public:
     // 带参数的构造函数，自定义初始位置和朝向
     Executor(int32_t x, int32_t y, char heading);
     
+    // 设置行为策略
+    void setBehavior(IVehicleBehavior* behavior);
+
     // 执行单个指令
     void executeCommand(char command);
     // 执行批量指令

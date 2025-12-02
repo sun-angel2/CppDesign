@@ -1,11 +1,16 @@
 #include "executor.h"
+#include "vehicle_behavior.h"
 
 // 默认初始化
-Executor::Executor() : x_(0), y_(0), heading_('N'), is_accelerating_(false), is_reversing_(false) {}
+Executor::Executor() : x_(0), y_(0), heading_('N'), is_accelerating_(false), is_reversing_(false), behavior_(nullptr) {}
 
 // 自定义初始化
 Executor::Executor(int32_t x, int32_t y, char heading) 
-    : x_(x), y_(y), heading_(heading), is_accelerating_(false), is_reversing_(false) {}
+    : x_(x), y_(y), heading_(heading), is_accelerating_(false), is_reversing_(false), behavior_(nullptr) {}
+
+void Executor::setBehavior(IVehicleBehavior* behavior) {
+    behavior_ = behavior;
+}
 
 // 左转逻辑
 void Executor::turnLeft() {
@@ -49,6 +54,11 @@ void Executor::moveBackward() {
 
 // 掉头逻辑
 void Executor::executeTurnRound() {
+    if (behavior_) {
+        behavior_->executeTurnRound(this);
+        return;
+    }
+
     if (is_accelerating_) {
         moveForward();
         turnLeft();
@@ -63,6 +73,17 @@ void Executor::executeTurnRound() {
 
 // 执行单个指令
 void Executor::executeCommand(char command) {
+    if (behavior_) {
+        switch (command) {
+            case 'M': behavior_->moveForward(this); break;
+            case 'L': behavior_->turnLeft(this); break;
+            case 'R': behavior_->turnRight(this); break;
+            case 'F': is_accelerating_ = !is_accelerating_; break;
+            case 'B': is_reversing_ = !is_reversing_; break;
+        }
+        return;
+    }
+
     switch (command) {
         case 'F':
             is_accelerating_ = !is_accelerating_;
